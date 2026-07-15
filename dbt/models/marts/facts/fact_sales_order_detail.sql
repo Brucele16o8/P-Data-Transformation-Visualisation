@@ -7,7 +7,50 @@
     )
 }}
 
-WITH sales AS
+WITH source_sales AS
+(
+    SELECT
+          sales_order_detail_key
+        , event_id
+        , event_timestamp_utc
+        , local_event_timestamp
+        , sales_date
+        , order_id
+        , product_id
+        , store_id
+        , order_qty
+        , unit_price
+        , sales_amount
+        , currency_code
+        , customer_country_name
+        , customer_region_name
+        , customer_city_name
+        , customer_identity_hash
+        , source_loaded_at
+    FROM {{ ref('int_sales_order_detail__enriched') }}
+
+    {% if is_incremental() %}
+
+    WHERE source_loaded_at >=
+          (
+              SELECT
+                    DATEADD
+                    (
+                        DAY
+                      , -1
+                      , COALESCE
+                        (
+                            MAX(source_loaded_at)
+                          , TIMESTAMP '1900-01-01 00:00:00'
+                        )
+                    )
+              FROM {{ this }}
+          )
+
+    {% endif %}
+)
+
+, prepared_sales AS
 (
     SELECT
           sales_order_detail_key
@@ -28,7 +71,12 @@ WITH sales AS
           )                                             AS store_id
         , CAST(order_qty AS INTEGER)                     AS order_qty
         , CAST(unit_price AS DECIMAL(18, 2))             AS unit_price
-        , CAST(sales_amount AS DECIMAL(18, 2))           AS sales_amount
+        , COALESCE
+          (
+              CAST(sales_amount AS DECIMAL(18, 2))
+            , CAST(order_qty AS DECIMAL(18, 2))
+              * CAST(unit_price AS DECIMAL(18, 2))
+          )                                             AS sales_amount
         , NULLIF
           (
               UPPER(TRIM(CAST(currency_code AS VARCHAR(3))))
@@ -57,31 +105,40 @@ WITH sales AS
           END                                           AS customer_city_name
         , customer_identity_hash
         , source_loaded_at
-    FROM {{ ref('int_sales_order_detail__enriched') }}
-
-    {% if is_incremental() %}
-
-    WHERE source_loaded_at >=
+        , ROW_NUMBER() OVER
           (
-              SELECT
-                    DATEADD
-                    (
-                        DAY
-                      , -1
-                      , COALESCE
-                        (
-                            MAX(source_loaded_at)
-                          , CAST
-                            (
-                                '1900-01-01 00:00:00'
-                                AS TIMESTAMP
-                            )
-                        )
-                    )
-              FROM {{ this }}
-          )
+              PARTITION BY sales_order_detail_key
+              ORDER BY
+                    source_loaded_at DESC NULLS LAST
+                  , event_timestamp_utc DESC NULLS LAST
+                  , event_id DESC
+          )                                             AS row_number
+    FROM source_sales
+)
 
-    {% endif %}
+, sales AS
+(
+    SELECT
+          sales_order_detail_key
+        , event_id
+        , event_timestamp_utc
+        , local_event_timestamp
+        , sales_date
+        , order_id
+        , product_id
+        , store_id
+        , order_qty
+        , unit_price
+        , sales_amount
+        , currency_code
+        , customer_country_name
+        , customer_region_name
+        , customer_city_name
+        , customer_identity_hash
+        , source_loaded_at
+    FROM prepared_sales
+    WHERE row_number = 1
+      AND sales_amount IS NOT NULL
 )
 
 SELECT
@@ -118,6 +175,8 @@ SELECT
       )                                                 AS currency_key
     , sales.event_id
     , sales.order_id
+    , sales.product_id                                  AS source_product_id
+    , sales.store_id                                    AS source_store_id
     , sales.event_timestamp_utc
     , sales.local_event_timestamp
     , sales.order_qty
@@ -126,8 +185,7 @@ SELECT
     , sales.currency_code                               AS source_currency_code
     , exchange_rate.exchange_rate_to_usd
     , CASE
-          WHEN sales.sales_amount IS NULL
-            OR exchange_rate.exchange_rate_to_usd IS NULL
+          WHEN exchange_rate.exchange_rate_to_usd IS NULL
               THEN NULL
           ELSE CAST
                (

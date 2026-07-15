@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: >
+      Customer dimension containing one row per customer identity,
+      plus one reserved Unknown row.
+
+    columns:
+      - name: customer_key
+        data_tests:
+          - not_null
+          - unique
+
+      - name: customer_identity_hash
+        data_tests:
+          - not_null
+          - unique
