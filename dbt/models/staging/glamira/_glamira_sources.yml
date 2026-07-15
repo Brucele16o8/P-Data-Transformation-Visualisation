@@ -9,6 +9,9 @@ sources:
       - name: glamira_events
         description: Original MongoDB events stored as one SUPER document per row.
 
+      - name: product_information
+        description: Product-information records loaded directly from S3 into Redshift.
+
       - name: ip_location_lookup
         description: IP-address-to-location lookup data loaded from S3.
 
