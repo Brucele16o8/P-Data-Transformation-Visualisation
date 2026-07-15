@@ -1,0 +1,66 @@
+store_id,store_domain,store_name,country_code,country_name,currency_code
+1,ring-paare.de,Ring Paare Germany,DE,Germany,EUR
+6,glamira.de,Glamira Germany,DE,Germany,EUR
+7,glamira.co.uk,Glamira United Kingdom,GB,United Kingdom,GBP
+8,glamira.es,Glamira Spain,ES,Spain,EUR
+9,glamira.at,Glamira Austria,AT,Austria,EUR
+10,glamira.ch,Glamira Switzerland,CH,Switzerland,CHF
+11,glamira.nl,Glamira Netherlands,NL,Netherlands,EUR
+12,glamira.fr,Glamira France,FR,France,EUR
+13,glamira.dk,Glamira Denmark,DK,Denmark,DKK
+14,glamira.it,Glamira Italy,IT,Italy,EUR
+16,glamira.fi,Glamira Finland,FI,Finland,EUR
+17,glamira.com.tr,Glamira Türkiye,TR,Türkiye,TRY
+19,glamira.se,Glamira Sweden,SE,Sweden,SEK
+25,glamira.cn,Glamira China,CN,China,CNY
+26,glamira.com.br,Glamira Brazil,BR,Brazil,BRL
+27,glamira.jp,Glamira Japan,JP,Japan,JPY
+29,glamira.com.au,Glamira Australia,AU,Australia,AUD
+30,glamira.no,Glamira Norway,NO,Norway,NOK
+32,glamira.be,Glamira Belgium,BE,Belgium,EUR
+33,glamira.be,Glamira Belgium,BE,Belgium,EUR
+34,glamira.pt,Glamira Portugal,PT,Portugal,EUR
+35,glamira.ch,Glamira Switzerland,CH,Switzerland,CHF
+36,glamira.com.mt,Glamira Malta,MT,Malta,EUR
+37,glamira.sg,Glamira Singapore,SG,Singapore,SGD
+38,glamira.ca,Glamira Canada,CA,Canada,CAD
+39,glamira.ca,Glamira Canada,CA,Canada,CAD
+40,glamira.ie,Glamira Ireland,IE,Ireland,EUR
+41,glamira.com,Glamira United States,US,United States,USD
+45,glamira.cz,Glamira Czechia,CZ,Czechia,CZK
+46,glamira.hu,Glamira Hungary,HU,Hungary,HUF
+47,glamira.hk,Glamira Hong Kong,HK,Hong Kong,HKD
+48,glamira.hk,Glamira Hong Kong,HK,Hong Kong,HKD
+50,glamira.pl,Glamira Poland,PL,Poland,PLN
+51,glamira.ro,Glamira Romania,RO,Romania,RON
+52,glamira.rs,Glamira Serbia,RS,Serbia,RSD
+53,glamira.sk,Glamira Slovakia,SK,Slovakia,EUR
+54,glamira.vn,Glamira Vietnam,VN,Vietnam,VND
+55,glamira.si,Glamira Slovenia,SI,Slovenia,EUR
+56,glamira.hr,Glamira Croatia,HR,Croatia,HRK
+57,glamira.lt,Glamira Lithuania,LT,Lithuania,EUR
+58,glamira.ee,Glamira Estonia,EE,Estonia,EUR
+59,glamira.lv,Glamira Latvia,LV,Latvia,EUR
+60,glamira.co.nz,Glamira New Zealand,NZ,New Zealand,NZD
+61,glamira.ch,Glamira Switzerland,CH,Switzerland,CHF
+62,glamira.com.mx,Glamira Mexico,MX,Mexico,MXN
+63,glamira.ae,Glamira United Arab Emirates,AE,United Arab Emirates,AED
+64,glamira.in,Glamira India,IN,India,INR
+65,glamira.com.ar,Glamira Argentina,AR,Argentina,ARS
+66,glamira.bg,Glamira Bulgaria,BG,Bulgaria,BGN
+68,glamira.com,Glamira United States,US,United States,USD
+69,glamira.com.bo,Glamira Bolivia,BO,Bolivia,BOB
+70,glamira.com.co,Glamira Colombia,CO,Colombia,COP
+71,glamira.co.cr,Glamira Costa Rica,CR,Costa Rica,CRC
+72,glamira.com.do,Glamira Dominican Republic,DO,Dominican Republic,DOP
+73,glamira.com.ec,Glamira Ecuador,EC,Ecuador,USD
+74,glamira.com.gt,Glamira Guatemala,GT,Guatemala,GTQ
+76,glamira.com.pe,Glamira Peru,PE,Peru,PEN
+79,glamira.co.za,Glamira South Africa,ZA,South Africa,ZAR
+85,glamira.cl,Glamira Chile,CL,Chile,CLP
+86,glamira.com.ph,Glamira Philippines,PH,Philippines,PHP
+88,glamira.md,Glamira Moldova,MD,Moldova,MDL
+89,glamira.com.uy,Glamira Uruguay,UY,Uruguay,UYU
+91,glamira.com.py,Glamira Paraguay,PY,Paraguay,PYG
+93,glamira.com.pr,Glamira Puerto Rico,PR,Puerto Rico,USD
+100,glamira.com.kw,Glamira Kuwait,KW,Kuwait,KWD
