@@ -1,6 +1,6 @@
-BEGIN;
+-- BEGIN;
 
-TRUNCATE TABLE landing.ip_location_lookup;
+-- TRUNCATE TABLE landing.ip_location_lookup;
 
 COPY landing.ip_location_lookup
 (
@@ -20,4 +20,4 @@ FORMAT AS JSON 'auto'
 TIMEFORMAT 'auto'
 REGION 'ap-southeast-2';
 
-COMMIT;
+-- COMMIT;
