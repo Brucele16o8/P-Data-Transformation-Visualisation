@@ -1,0 +1,93 @@
+version: 2
+
+models:
+  - name: fact_sales_order_detail
+    description: >
+      Sales fact table at the grain of one row per product line
+      from a checkout-success order.
+
+    columns:
+      - name: sales_order_detail_key
+        description: Unique identifier for the sales order line.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: customer_key
+        description: Foreign key to dim_customer.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key
+
+      - name: store_key
+        description: Foreign key to dim_store.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_store')
+                field: store_key
+
+      - name: date_key
+        description: Foreign key to dim_date.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: product_key
+        description: Foreign key to dim_product.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_key
+
+      - name: location_key
+        description: Foreign key to dim_location.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_location')
+                field: location_key
+
+      - name: currency_key
+        description: Foreign key to dim_currency.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_currency')
+                field: currency_key
+
+      - name: event_id
+        description: Identifier of the source checkout-success event.
+        data_tests:
+          - not_null
+
+      - name: order_id
+        description: Source order identifier.
+        data_tests:
+          - not_null
+
+      - name: order_qty
+        description: Quantity purchased for the order line.
+        data_tests:
+          - not_null
+
+      - name: sales_amount
+        description: Total sales amount for the order line.
+        data_tests:
+          - not_null
+
+      - name: source_loaded_at
+        description: Timestamp when the source record was loaded.
+        data_tests:
+          - not_null

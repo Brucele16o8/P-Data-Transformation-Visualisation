@@ -26,6 +26,10 @@ clean-targets:
   - 'target'
   - 'dbt_packages'
 
+vars:
+  date_dimension_start: '2018-01-01'
+  date_dimension_end: '2035-12-31'
+
 models:
   glamira_analytics:
     staging:
@@ -39,3 +43,21 @@ models:
     marts:
       +schema: mart
       +materialized: table
+
+seeds:
+  glamira_analytics:
+    +schema: reference
+
+    store_reference:
+      +column_types:
+        store_id: varchar(50)
+        store_domain: varchar(255)
+        store_name: varchar(255)
+        country_code: varchar(2)
+        country_name: varchar(255)
+        currency_code: varchar(3)
+
+    exchange_rate:
+      +column_types:
+        currency_code: varchar(3)
+        exchange_rate_to_usd: decimal(18, 8)

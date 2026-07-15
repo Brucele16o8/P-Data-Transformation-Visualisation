@@ -1,0 +1,19 @@
+version: 2
+
+seeds:
+  - name: exchange_rate
+    description: >
+      Fixed synthetic exchange rates used only for this coursework project.
+      One unit of currency_code equals exchange_rate_to_usd USD.
+
+    columns:
+      - name: currency_code
+        description: Source transaction currency code.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: exchange_rate_to_usd
+        description: Fixed number of USD for one unit of the source currency.
+        data_tests:
+          - not_null
