@@ -1,0 +1,38 @@
+version: 2
+
+seeds:
+  - name: store_reference
+    description: >
+      Reviewed mapping from Glamira store IDs to domains, countries, and
+      historical ISO 4217 currencies used by the 2020 checkout-success data.
+    columns:
+      - name: store_id
+        description: Natural identifier from the source events.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: store_domain
+        data_tests:
+          - not_null
+
+      - name: store_name
+        data_tests:
+          - not_null
+
+      - name: country_code
+        description: ISO 3166-1 alpha-2 country code.
+        data_tests:
+          - not_null
+
+      - name: country_name
+        data_tests:
+          - not_null
+
+      - name: currency_symbol
+        description: Normalized display symbol for the historical source currency.
+
+      - name: currency_code
+        description: ISO 4217 currency code for the historical 2020 sales records.
+        data_tests:
+          - not_null

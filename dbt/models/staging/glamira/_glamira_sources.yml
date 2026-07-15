@@ -1,0 +1,24 @@
+version: 2
+
+sources:
+  - name: landing
+    schema: landing
+    description: Tables loaded directly from Amazon S3 into Redshift.
+
+    tables:
+      - name: glamira_events
+        description: Original MongoDB events stored as one SUPER document per row.
+
+      - name: ip_location_lookup
+        description: IP-address-to-location lookup data loaded from S3.
+
+        columns:
+          - name: event_data
+            description: Complete original MongoDB event document.
+            data_tests:
+              - not_null
+
+          - name: loaded_at
+            description: Timestamp when Redshift loaded the event.
+            data_tests:
+              - not_null
