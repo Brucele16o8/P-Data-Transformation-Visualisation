@@ -1,133 +1,103 @@
-WITH source_sales AS
+{{
+    config(
+        materialized='view'
+    )
+}}
+
+WITH source_data AS
 (
     SELECT
-          sales_order_detail_key
-        , event_id
-        , event_timestamp_utc
-        , local_event_timestamp
-        , sales_date
-        , order_id
-        , product_id
-        , store_id
-        , order_qty
-        , unit_price
-        , sales_amount
-        , currency_code
-        , customer_country_name
-        , customer_region_name
-        , customer_city_name
-        , customer_identity_hash
-        , source_loaded_at
-    FROM {{ ref('int_sales_order_detail__enriched') }}
-
-    {% if is_incremental() %}
-
-    WHERE source_loaded_at >=
-          (
-              SELECT
-                    DATEADD
-                    (
-                        DAY
-                      , -1
-                      , COALESCE
-                        (
-                            MAX(source_loaded_at)
-                          , CAST
-                            (
-                                '1900-01-01 00:00:00'
-                                AS TIMESTAMP
-                            )
-                        )
-                    )
-              FROM {{ this }}
-          )
-
-    {% endif %}
+          event_data
+        , loaded_at
+    FROM {{ source('landing', 'glamira_events') }}
 )
 
-, prepared_sales AS
+, renamed AS
 (
     SELECT
-          sales_order_detail_key
-        , event_id
-        , event_timestamp_utc
-        , local_event_timestamp
-        , CAST(sales_date AS DATE)                       AS sales_date
-        , order_id
-        , NULLIF
+          JSON_EXTRACT_PATH_TEXT
           (
-              TRIM(CAST(product_id AS VARCHAR(50)))
-            , ''
-          )                                             AS product_id
-        , NULLIF
+              JSON_SERIALIZE(event_data._id)
+            , '$oid'
+          )                                             AS event_id_raw
+        , event_data.collection::VARCHAR                AS event_type_raw
+        , event_data.time_stamp::VARCHAR                AS event_epoch_seconds_raw
+        , event_data.local_time::VARCHAR                AS local_time_raw
+        , event_data.user_id_db::VARCHAR                AS customer_id_raw
+        , event_data.email_address::VARCHAR             AS email_address_raw
+        , event_data.device_id::VARCHAR                 AS device_id_raw
+        , event_data.ip::VARCHAR                        AS ip_address_raw
+        , event_data.store_id::VARCHAR                  AS store_id_raw
+        , event_data.order_id::VARCHAR                  AS order_id_raw
+        , event_data.user_agent::VARCHAR                AS user_agent_raw
+        , event_data.resolution::VARCHAR                AS screen_resolution_raw
+        , event_data.current_url::VARCHAR               AS current_url_raw
+        , event_data.referrer_url::VARCHAR              AS referrer_url_raw
+        , event_data.cart_products                      AS cart_products
+        , event_data                                    AS raw_event
+        , loaded_at
+    FROM source_data
+)
+
+, typed AS
+(
+    SELECT
+          NULLIF(TRIM(event_id_raw), '')                 AS event_id
+        , NULLIF(TRIM(event_type_raw), '')               AS event_type
+        , TRY_CAST
           (
-              TRIM(CAST(store_id AS VARCHAR(50)))
-            , ''
-          )                                             AS store_id
-        , CAST(order_qty AS INTEGER)                     AS order_qty
-        , CAST(unit_price AS DECIMAL(18, 2))             AS unit_price
-        , COALESCE
+              NULLIF(TRIM(event_epoch_seconds_raw), '')
+              AS BIGINT
+          )                                             AS event_epoch_seconds
+        , NULLIF(TRIM(local_time_raw), '')               AS local_time_raw
+        , TRY_CAST
           (
-              CAST(sales_amount AS DECIMAL(18, 2))
-            , CAST
+              NULLIF(TRIM(local_time_raw), '')
+              AS TIMESTAMP
+          )                                             AS local_event_timestamp
+        , NULLIF(TRIM(customer_id_raw), '')              AS customer_id
+        , NULLIF(LOWER(TRIM(email_address_raw)), '')     AS email_address
+        , NULLIF(TRIM(device_id_raw), '')                AS device_id
+        , NULLIF(TRIM(ip_address_raw), '')               AS ip_address
+        , NULLIF(TRIM(store_id_raw), '')                 AS store_id
+        , NULLIF(TRIM(order_id_raw), '')                 AS order_id
+        , NULLIF(TRIM(user_agent_raw), '')               AS user_agent
+        , NULLIF(TRIM(screen_resolution_raw), '')        AS screen_resolution
+        , NULLIF(TRIM(current_url_raw), '')              AS current_url
+        , NULLIF(TRIM(referrer_url_raw), '')             AS referrer_url
+        , cart_products
+        , raw_event
+        , loaded_at
+    FROM renamed
+)
+
+SELECT
+      event_id
+    , event_type
+    , event_epoch_seconds
+    , CASE
+          WHEN event_epoch_seconds IS NOT NULL
+              THEN DATEADD
               (
-                  order_qty * unit_price
-                  AS DECIMAL(18, 2)
+                  SECOND
+                , event_epoch_seconds
+                , TIMESTAMP '1970-01-01 00:00:00'
               )
-          )                                             AS sales_amount
-        , NULLIF
-          (
-              UPPER(TRIM(CAST(currency_code AS VARCHAR(3))))
-            , ''
-          )                                             AS currency_code
-        , COALESCE
-          (
-              NULLIF(TRIM(customer_country_name), '')
-            , 'Unknown'
-          )                                             AS customer_country_name
-        , COALESCE
-          (
-              NULLIF(TRIM(customer_region_name), '')
-            , 'Unknown'
-          )                                             AS customer_region_name
-        , COALESCE
-          (
-              NULLIF(TRIM(customer_city_name), '')
-            , 'Unknown'
-          )                                             AS customer_city_name
-        , customer_identity_hash
-        , source_loaded_at
-        , ROW_NUMBER() OVER
-          (
-              PARTITION BY sales_order_detail_key
-              ORDER BY
-                    source_loaded_at DESC NULLS LAST
-                  , event_timestamp_utc DESC NULLS LAST
-          )                                             AS row_number
-    FROM source_sales
-)
-
-, sales AS
-(
-    SELECT
-          sales_order_detail_key
-        , event_id
-        , event_timestamp_utc
-        , local_event_timestamp
-        , sales_date
-        , order_id
-        , product_id
-        , store_id
-        , order_qty
-        , unit_price
-        , sales_amount
-        , currency_code
-        , customer_country_name
-        , customer_region_name
-        , customer_city_name
-        , customer_identity_hash
-        , source_loaded_at
-    FROM prepared_sales
-    WHERE row_number = 1
-      AND sales_amount IS NOT NULL
-)
+          ELSE NULL
+      END                                               AS event_timestamp_utc
+    , local_event_timestamp
+    , local_time_raw
+    , customer_id
+    , email_address
+    , device_id
+    , ip_address
+    , store_id
+    , order_id
+    , user_agent
+    , screen_resolution
+    , current_url
+    , referrer_url
+    , cart_products
+    , raw_event
+    , loaded_at
+FROM typed

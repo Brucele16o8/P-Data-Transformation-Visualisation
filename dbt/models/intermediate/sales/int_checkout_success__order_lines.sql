@@ -4,6 +4,7 @@
         , unique_key='sales_order_detail_key'
         , incremental_strategy='delete+insert'
         , on_schema_change='sync_all_columns'
+        , static_analysis='off'
     )
 }}
 
@@ -20,16 +21,16 @@ WITH checkout_success_events AS
         , ip_address
         , store_id
         , order_id
-        , cart_products
+        , raw_event.cart_products                       AS cart_products
         , loaded_at
     FROM {{ ref('stg_glamira__events') }}
     WHERE event_type = 'checkout_success'
       AND order_id IS NOT NULL
-      AND cart_products IS NOT NULL
+      AND raw_event.cart_products IS NOT NULL
 
     {% if is_incremental() %}
 
-      AND loaded_at >=
+      AND CAST(loaded_at AS TIMESTAMP) >=
           (
               SELECT
                     DATEADD
@@ -38,11 +39,22 @@ WITH checkout_success_events AS
                       , -1
                       , COALESCE
                         (
-                            MAX(source_loaded_at)
-                          , TIMESTAMP '1900-01-01 00:00:00'
+                            MAX
+                            (
+                                CAST
+                                (
+                                    target.source_loaded_at
+                                    AS TIMESTAMP
+                                )
+                            )
+                          , CAST
+                            (
+                                '1900-01-01 00:00:00'
+                                AS TIMESTAMP
+                            )
                         )
                     )
-              FROM {{ this }}
+              FROM {{ this }} AS target
           )
 
     {% endif %}
@@ -65,8 +77,12 @@ WITH checkout_success_events AS
         , product_item.product_data
         , event.loaded_at
     FROM checkout_success_events AS event
-       , UNNEST(event.cart_products) WITH OFFSET
-         AS product_item(product_data, product_index)
+       , UNNEST(event.cart_products)
+         WITH OFFSET AS product_item
+         (
+               product_data
+             , product_index
+         )
 )
 
 , typed AS
