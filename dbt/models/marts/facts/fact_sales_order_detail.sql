@@ -10,28 +10,28 @@
 WITH source_sales AS
 (
     SELECT
-          sales_order_detail_key
-        , event_id
-        , event_timestamp_utc
-        , local_event_timestamp
-        , sales_date
-        , order_id
-        , product_id
-        , store_id
-        , order_qty
-        , unit_price
-        , sales_amount
-        , currency_code
-        , customer_country_name
-        , customer_region_name
-        , customer_city_name
-        , customer_identity_hash
-        , source_loaded_at
-    FROM {{ ref('int_sales_order_detail__enriched') }}
+          source_data.sales_order_detail_key
+        , source_data.event_id
+        , source_data.event_timestamp_utc
+        , source_data.local_event_timestamp
+        , source_data.sales_date
+        , source_data.order_id
+        , source_data.product_id
+        , source_data.store_id
+        , source_data.order_qty
+        , source_data.unit_price
+        , source_data.sales_amount
+        , source_data.currency_code
+        , source_data.customer_country_name
+        , source_data.customer_region_name
+        , source_data.customer_city_name
+        , source_data.customer_identity_hash
+        , source_data.source_loaded_at
+    FROM {{ ref('int_sales_order_detail__enriched') }} AS source_data
 
     {% if is_incremental() %}
 
-    WHERE source_loaded_at >=
+    WHERE CAST(source_data.source_loaded_at AS TIMESTAMP) >=
           (
               SELECT
                     DATEADD
@@ -40,11 +40,22 @@ WITH source_sales AS
                       , -1
                       , COALESCE
                         (
-                            MAX(source_loaded_at)
-                          , TIMESTAMP '1900-01-01 00:00:00'
+                            MAX
+                            (
+                                CAST
+                                (
+                                    target.source_loaded_at
+                                    AS TIMESTAMP
+                                )
+                            )
+                          , CAST
+                            (
+                                '1900-01-01 00:00:00'
+                                AS TIMESTAMP
+                            )
                         )
                     )
-              FROM {{ this }}
+              FROM {{ this }} AS target
           )
 
     {% endif %}
