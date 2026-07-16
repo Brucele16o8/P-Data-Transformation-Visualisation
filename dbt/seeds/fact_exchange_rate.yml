@@ -1,7 +1,7 @@
 version: 2
 
 seeds:
-  - name: exchange_rate
+  - name: fact_exchange_rate
     description: >
       Fixed synthetic exchange rates used only for this coursework project.
       One unit of currency_code equals exchange_rate_to_usd USD.

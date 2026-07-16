@@ -1,11 +1,15 @@
-{{
-    config(
-          materialized='incremental'
-        , unique_key='sales_order_detail_key'
-        , incremental_strategy='delete+insert'
-        , on_schema_change='sync_all_columns'
-    )
-}}
+
+      
+  
+    
+
+  create  table
+    "glamira_analytics"."dbt_brucele16o8_mart"."fact_sales_order_detail__dbt_tmp"
+    
+    
+    
+  as (
+    
 
 WITH source_sales AS
 (
@@ -27,38 +31,9 @@ WITH source_sales AS
         , source_data.customer_city_name
         , source_data.customer_identity_hash
         , source_data.source_loaded_at
-    FROM {{ ref('int_sales_order_detail__enriched') }} AS source_data
+    FROM "glamira_analytics"."dbt_brucele16o8_intermediate"."int_sales_order_detail__enriched" AS source_data
 
-    {% if is_incremental() %}
-
-    WHERE CAST(source_data.source_loaded_at AS TIMESTAMP) >=
-          (
-              SELECT
-                    DATEADD
-                    (
-                        DAY
-                      , -1
-                      , COALESCE
-                        (
-                            MAX
-                            (
-                                CAST
-                                (
-                                    target.source_loaded_at
-                                    AS TIMESTAMP
-                                )
-                            )
-                          , CAST
-                            (
-                                '1900-01-01 00:00:00'
-                                AS TIMESTAMP
-                            )
-                        )
-                    )
-              FROM {{ this }} AS target
-          )
-
-    {% endif %}
+    
 )
 
 , prepared_sales AS
@@ -212,20 +187,23 @@ SELECT
     , CAST('USD' AS VARCHAR(3))                         AS reporting_currency_code
     , sales.source_loaded_at
 FROM sales
-LEFT JOIN {{ ref('dim_customer') }} AS customer
+LEFT JOIN "glamira_analytics"."dbt_brucele16o8_mart"."dim_customer" AS customer
     ON sales.customer_identity_hash
        = customer.customer_identity_hash
-LEFT JOIN {{ ref('dim_store') }} AS store
+LEFT JOIN "glamira_analytics"."dbt_brucele16o8_mart"."dim_store" AS store
     ON sales.store_id = store.store_id
-LEFT JOIN {{ ref('dim_date') }} AS date_dimension
+LEFT JOIN "glamira_analytics"."dbt_brucele16o8_mart"."dim_date" AS date_dimension
     ON sales.sales_date = date_dimension.full_date
-LEFT JOIN {{ ref('dim_product') }} AS product
+LEFT JOIN "glamira_analytics"."dbt_brucele16o8_mart"."dim_product" AS product
     ON sales.product_id = product.product_id
-LEFT JOIN {{ ref('dim_location') }} AS location
+LEFT JOIN "glamira_analytics"."dbt_brucele16o8_mart"."dim_location" AS location
     ON sales.customer_country_name = location.country_name
    AND sales.customer_region_name = location.region_name
    AND sales.customer_city_name = location.city_name
-LEFT JOIN {{ ref('dim_currency') }} AS currency
+LEFT JOIN "glamira_analytics"."dbt_brucele16o8_mart"."dim_currency" AS currency
     ON sales.currency_code = currency.currency_code
-LEFT JOIN {{ ref('fact_exchange_rate') }} AS exchange_rate
+LEFT JOIN "glamira_analytics"."dbt_brucele16o8_reference"."fact_exchange_rate" AS exchange_rate
     ON sales.currency_code = exchange_rate.currency_code
+  );
+  
+  

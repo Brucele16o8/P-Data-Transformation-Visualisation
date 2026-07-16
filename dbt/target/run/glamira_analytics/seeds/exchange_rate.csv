@@ -1,0 +1,12 @@
+
+    
+    
+    truncate table "glamira_analytics"."dbt_brucele16o8_reference"."exchange_rate";
+    -- dbt seed --
+    
+          insert into "glamira_analytics"."dbt_brucele16o8_reference"."exchange_rate" ("currency_code", "exchange_rate_to_usd") values
+          (%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s),(%s,%s)
+      
+
+;
+  
