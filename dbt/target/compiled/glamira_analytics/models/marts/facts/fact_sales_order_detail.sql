@@ -9,6 +9,7 @@ WITH source_sales AS
         , source_data.local_event_timestamp
         , source_data.sales_date
         , source_data.order_id
+        , source_data.product_index
         , source_data.product_id
         , source_data.store_id
         , source_data.order_qty
@@ -23,35 +24,6 @@ WITH source_sales AS
     FROM "glamira_analytics"."dbt_brucele16o8_intermediate"."int_sales_order_detail__enriched" AS source_data
 
     
-
-    WHERE CAST(source_data.source_loaded_at AS TIMESTAMP) >=
-          (
-              SELECT
-                    DATEADD
-                    (
-                        DAY
-                      , -1
-                      , COALESCE
-                        (
-                            MAX
-                            (
-                                CAST
-                                (
-                                    target.source_loaded_at
-                                    AS TIMESTAMP
-                                )
-                            )
-                          , CAST
-                            (
-                                '1900-01-01 00:00:00'
-                                AS TIMESTAMP
-                            )
-                        )
-                    )
-              FROM "glamira_analytics"."dbt_brucele16o8_mart"."fact_sales_order_detail" AS target
-          )
-
-    
 )
 
 , prepared_sales AS
@@ -63,6 +35,7 @@ WITH source_sales AS
         , local_event_timestamp
         , CAST(sales_date AS DATE)                       AS sales_date
         , order_id
+        , CAST(product_index AS INTEGER)                 AS product_index
         , NULLIF
           (
               TRIM(CAST(product_id AS VARCHAR(50)))
@@ -78,12 +51,22 @@ WITH source_sales AS
         , COALESCE
           (
               CAST(sales_amount AS DECIMAL(18, 2))
-            , CAST(order_qty AS DECIMAL(18, 2))
-              * CAST(unit_price AS DECIMAL(18, 2))
+            , CAST
+              (
+                  CAST(order_qty AS DECIMAL(18, 2))
+                  * CAST(unit_price AS DECIMAL(18, 2))
+                  AS DECIMAL(18, 2)
+              )
           )                                             AS sales_amount
         , NULLIF
           (
-              UPPER(TRIM(CAST(currency_code AS VARCHAR(3))))
+              UPPER
+              (
+                  TRIM
+                  (
+                      CAST(currency_code AS VARCHAR(3))
+                  )
+              )
             , ''
           )                                             AS currency_code
         , CASE
@@ -109,44 +92,24 @@ WITH source_sales AS
           END                                           AS customer_city_name
         , customer_identity_hash
         , source_loaded_at
-        , ROW_NUMBER() OVER
-          (
-              PARTITION BY sales_order_detail_key
-              ORDER BY
-                    source_loaded_at DESC NULLS LAST
-                  , event_timestamp_utc DESC NULLS LAST
-                  , event_id DESC
-          )                                             AS row_number
     FROM source_sales
 )
 
-, sales AS
-(
-    SELECT
-          sales_order_detail_key
-        , event_id
-        , event_timestamp_utc
-        , local_event_timestamp
-        , sales_date
-        , order_id
-        , product_id
-        , store_id
-        , order_qty
-        , unit_price
-        , sales_amount
-        , currency_code
-        , customer_country_name
-        , customer_region_name
-        , customer_city_name
-        , customer_identity_hash
-        , source_loaded_at
-    FROM prepared_sales
-    WHERE row_number = 1
-      AND sales_amount IS NOT NULL
-)
-
 SELECT
-      sales.sales_order_detail_key
+      FNV_HASH
+      (
+            'fact_sales_order_detail'
+            || '|'
+            || CAST
+               (
+                   sales.sales_order_detail_key
+                   AS VARCHAR(50)
+               )
+      )                                                 AS fact_sales_order_detail_key
+
+    -- Original order-line identifier created during UNNEST.
+    , sales.sales_order_detail_key                      AS source_sales_order_detail_key
+
     , COALESCE
       (
           customer.customer_key
@@ -177,10 +140,13 @@ SELECT
           currency.currency_key
         , CAST(-1 AS BIGINT)
       )                                                 AS currency_key
+
     , sales.event_id
     , sales.order_id
+    , sales.product_index
     , sales.product_id                                  AS source_product_id
     , sales.store_id                                    AS source_store_id
+    , sales.sales_date
     , sales.event_timestamp_utc
     , sales.local_event_timestamp
     , sales.order_qty
@@ -188,8 +154,10 @@ SELECT
     , sales.sales_amount
     , sales.currency_code                               AS source_currency_code
     , exchange_rate.exchange_rate_to_usd
+
     , CASE
-          WHEN exchange_rate.exchange_rate_to_usd IS NULL
+          WHEN sales.sales_amount IS NULL
+            OR exchange_rate.exchange_rate_to_usd IS NULL
               THEN NULL
           ELSE CAST
                (
@@ -202,9 +170,17 @@ SELECT
                    AS DECIMAL(18, 2)
                )
       END                                               AS sales_amount_usd
+
     , CAST('USD' AS VARCHAR(3))                         AS reporting_currency_code
+
+    , CASE
+          WHEN sales.sales_amount IS NULL
+              THEN FALSE
+          ELSE TRUE
+      END                                               AS has_sales_amount
+
     , sales.source_loaded_at
-FROM sales
+FROM prepared_sales AS sales
 LEFT JOIN "glamira_analytics"."dbt_brucele16o8_mart"."dim_customer" AS customer
     ON sales.customer_identity_hash
        = customer.customer_identity_hash
