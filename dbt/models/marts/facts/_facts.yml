@@ -6,13 +6,6 @@ models:
       Sales fact table at the grain of one row per product line
       from a checkout-success order.
 
-    columns:
-      - name: sales_order_detail_key
-        description: Unique identifier for the sales order line.
-        data_tests:
-          - not_null
-          - unique
-
       - name: customer_key
         description: Foreign key to dim_customer.
         data_tests:

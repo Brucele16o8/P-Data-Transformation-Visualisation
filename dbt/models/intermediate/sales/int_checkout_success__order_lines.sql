@@ -117,7 +117,12 @@ WITH checkout_success_events AS
           (
               NULLIF
               (
-                  TRIM(product_data.price::VARCHAR)
+                  REPLACE
+                  (
+                      TRIM(product_data.price::VARCHAR)
+                    , ','
+                    , '.'
+                  )
                 , ''
               )
               AS DECIMAL(18, 2)

@@ -21,35 +21,6 @@ WITH checkout_success_events AS
       AND raw_event.cart_products IS NOT NULL
 
     
-
-      AND CAST(loaded_at AS TIMESTAMP) >=
-          (
-              SELECT
-                    DATEADD
-                    (
-                        DAY
-                      , -1
-                      , COALESCE
-                        (
-                            MAX
-                            (
-                                CAST
-                                (
-                                    target.source_loaded_at
-                                    AS TIMESTAMP
-                                )
-                            )
-                          , CAST
-                            (
-                                '1900-01-01 00:00:00'
-                                AS TIMESTAMP
-                            )
-                        )
-                    )
-              FROM "glamira_analytics"."dbt_brucele16o8_intermediate"."int_checkout_success__order_lines" AS target
-          )
-
-    
 )
 
 , unnested_products AS
@@ -109,7 +80,12 @@ WITH checkout_success_events AS
           (
               NULLIF
               (
-                  TRIM(product_data.price::VARCHAR)
+                  REPLACE
+                  (
+                      TRIM(product_data.price::VARCHAR)
+                    , ','
+                    , '.'
+                  )
                 , ''
               )
               AS DECIMAL(18, 2)

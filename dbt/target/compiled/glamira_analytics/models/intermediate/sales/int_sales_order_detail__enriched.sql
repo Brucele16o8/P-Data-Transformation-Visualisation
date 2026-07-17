@@ -8,6 +8,7 @@ WITH order_lines AS
         , event_timestamp_utc
         , local_event_timestamp
         , order_id
+        , product_index
         , product_id
         , store_id
         , order_qty
@@ -32,6 +33,7 @@ WITH order_lines AS
         , order_lines.local_event_timestamp
         , CAST(order_lines.event_timestamp_utc AS DATE)  AS sales_date
         , order_lines.order_id
+        , order_lines.product_index
         , order_lines.product_id
         , order_lines.store_id
         , order_lines.order_qty
@@ -75,6 +77,7 @@ SELECT
     , local_event_timestamp
     , sales_date
     , order_id
+    , product_index
     , product_id
     , store_id
     , order_qty
