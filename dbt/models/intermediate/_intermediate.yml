@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: int_checkout_success__order_lines
+    description: >
+      One row per product unnested from a checkout_success event.
+
+    data_tests:
+      - dbt_expectations.expect_compound_columns_to_be_unique:
+          arguments:
+            column_list:
+              - event_id
+              - product_index
+
+    columns:
+      - name: event_id
+        data_tests:
+          - not_null
+
+      - name: product_index
+        data_tests:
+          - not_null
+
+      - name: sales_order_detail_key
+        data_tests:
+          - not_null
+          - unique

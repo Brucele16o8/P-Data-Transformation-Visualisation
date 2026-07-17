@@ -4,7 +4,31 @@ models:
   - name: fact_sales_order_detail
     description: >
       Sales fact table at the grain of one row per product line
-      from a checkout-success order.
+      unnested from a checkout-success event.
+
+    data_tests:
+      - dbt_expectations.expect_compound_columns_to_be_unique:
+          arguments:
+            column_list:
+              - event_id
+              - product_index
+
+    columns:
+      - name: fact_sales_order_detail_key
+        description: >
+          Deterministic primary key belonging to the sales order-detail
+          fact table.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: source_sales_order_detail_key
+        description: >
+          Original order-line identifier created from event_id and
+          product_index during the UNNEST transformation.
+        data_tests:
+          - not_null
+          - unique
 
       - name: customer_key
         description: Foreign key to dim_customer.
@@ -70,17 +94,80 @@ models:
         data_tests:
           - not_null
 
-      - name: order_qty
-        description: Quantity purchased for the order line.
+      - name: product_index
+        description: >
+          Position of the product inside the source cart_products array.
+          Together with event_id, it identifies one source order line.
         data_tests:
           - not_null
+
+      - name: source_product_id
+        description: Product identifier supplied by the source event.
+
+      - name: source_store_id
+        description: Store identifier supplied by the source event.
+
+      - name: sales_date
+        description: Date on which the checkout-success event occurred.
+        data_tests:
+          - not_null
+
+      - name: event_timestamp_utc
+        description: Source event timestamp in UTC.
+        data_tests:
+          - not_null
+
+      - name: local_event_timestamp
+        description: Event timestamp in the source store's local time.
+
+      - name: order_qty
+        description: >
+          Quantity purchased for the order line. This can be null when
+          the source product does not contain a usable quantity.
+
+      - name: unit_price
+        description: >
+          Unit price parsed from the source price. This can be null when
+          the source price is absent or invalid.
 
       - name: sales_amount
-        description: Total sales amount for the order line.
+        description: >
+          Sales amount for the order line. This can be null when either
+          order_qty or unit_price is unavailable.
+
+      - name: source_currency_code
+        description: Currency code associated with the original transaction.
+
+      - name: exchange_rate_to_usd
+        description: >
+          Number of USD represented by one unit of the source currency.
+
+      - name: sales_amount_usd
+        description: >
+          Sales amount converted to USD. This can be null when the source
+          sales amount or exchange rate is unavailable.
+
+      - name: reporting_currency_code
+        description: Currency used for the converted reporting amount.
         data_tests:
           - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - USD
+
+      - name: has_sales_amount
+        description: >
+          Indicates whether the order line has a usable sales amount.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - true
+                  - false
 
       - name: source_loaded_at
-        description: Timestamp when the source record was loaded.
+        description: Timestamp when the source batch was loaded.
         data_tests:
           - not_null
