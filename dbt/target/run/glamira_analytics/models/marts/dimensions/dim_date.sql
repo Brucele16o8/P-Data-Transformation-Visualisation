@@ -61,7 +61,7 @@ AS
           CAST
           (
               TO_CHAR(full_date, 'YYYYMMDD')
-              AS INT
+              AS INTEGER
           )                                             AS date_key
         , full_date
         , CAST
@@ -119,23 +119,25 @@ AS
                   THEN TRUE
               ELSE FALSE
           END                                           AS is_weekend
+        , FALSE                                         AS is_unknown
     FROM date_spine
 )
 
 SELECT
-      CAST(-1 AS INT)                                   AS date_key
-    , CAST(NULL AS DATE)                                AS full_date
-    , CAST(NULL AS SMALLINT)                            AS year_number
-    , CAST(NULL AS SMALLINT)                            AS quarter_number
-    , CAST(NULL AS SMALLINT)                            AS month_number
-    , CAST('Unknown' AS VARCHAR(20))                    AS month_name
-    , CAST(NULL AS SMALLINT)                            AS week_number
-    , CAST(NULL AS SMALLINT)                            AS day_number
-    , CAST('Unknown' AS VARCHAR(20))                    AS day_name
-    , CAST('Unknown' AS VARCHAR(7))                     AS year_month
-    , CAST(NULL AS DATE)                                AS month_start_date
-    , CAST(NULL AS DATE)                                AS quarter_start_date
-    , CAST(NULL AS BOOLEAN)                             AS is_weekend
+      CAST(-1 AS INTEGER)                               AS date_key
+    , CAST('1900-01-01' AS DATE)                       AS full_date
+    , CAST(0 AS SMALLINT)                              AS year_number
+    , CAST(0 AS SMALLINT)                              AS quarter_number
+    , CAST(0 AS SMALLINT)                              AS month_number
+    , CAST('Unknown' AS VARCHAR(20))                   AS month_name
+    , CAST(0 AS SMALLINT)                              AS week_number
+    , CAST(0 AS SMALLINT)                              AS day_number
+    , CAST('Unknown' AS VARCHAR(20))                   AS day_name
+    , CAST('Unknown' AS VARCHAR(7))                    AS year_month
+    , CAST('1900-01-01' AS DATE)                       AS month_start_date
+    , CAST('1900-01-01' AS DATE)                       AS quarter_start_date
+    , FALSE                                             AS is_weekend
+    , TRUE                                              AS is_unknown
 
 UNION ALL
 
@@ -153,6 +155,7 @@ SELECT
     , month_start_date
     , quarter_start_date
     , is_weekend
+    , is_unknown
 FROM known_dates
   );
   

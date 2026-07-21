@@ -1,6 +1,6 @@
 
 
-WITH ranked_products AS
+WITH dim_product__rank_product AS
 (
     SELECT
           product_id
@@ -25,7 +25,11 @@ WITH ranked_products AS
 (
     SELECT
           product_id
-        , COALESCE(sku, 'Unknown SKU')                  AS sku
+        , COALESCE
+          (
+              sku
+            , 'Unknown SKU'
+          )                                             AS sku
         , COALESCE
           (
               product_name
@@ -38,35 +42,55 @@ WITH ranked_products AS
           )                                             AS category_name
         , is_active
         , source_scraped_at
-    FROM ranked_products
+    FROM dim_product__rank_product
     WHERE row_number = 1
 )
 
-SELECT
-      CAST(-1 AS BIGINT)                                AS product_key
-    , CAST('Unknown Product ID' AS VARCHAR(50))         AS product_id
-    , CAST('Unknown SKU' AS VARCHAR(255))               AS sku
-    , CAST
-      (
-          'Unknown Product Name'
-          AS VARCHAR(1024)
-      )                                                 AS product_name
-    , CAST
-      (
-          'Unknown Category'
-          AS VARCHAR(512)
-      )                                                 AS category_name
-    , CAST(NULL AS BOOLEAN)                             AS is_active
-    , CAST(NULL AS TIMESTAMPTZ)                         AS source_scraped_at
+, dim_product__final AS 
+(
+    SELECT
+        CAST(-1 AS BIGINT)                                AS product_key
+        , CAST
+        (
+            'Unknown Product ID'
+            AS VARCHAR(50)
+        )                                                 AS product_id
+        , CAST
+        (
+            'Unknown SKU'
+            AS VARCHAR(255)
+        )                                                 AS sku
+        , CAST
+        (
+            'Unknown Product Name'
+            AS VARCHAR(1024)
+        )                                                 AS product_name
+        , CAST
+        (
+            'Unknown Category'
+            AS VARCHAR(512)
+        )                                                 AS category_name
+        , CAST(FALSE AS BOOLEAN)                            AS is_active
+        , CAST
+        (
+            '1900-01-01 00:00:00+00'
+            AS TIMESTAMPTZ
+        )                                                 AS source_scraped_at
+        , CAST(TRUE AS BOOLEAN)                             AS is_unknown_product
 
-UNION ALL
+    UNION ALL
 
-SELECT
-      FNV_HASH(product_id)                              AS product_key
-    , product_id
-    , sku
-    , product_name
-    , category_name
-    , is_active
-    , source_scraped_at
-FROM latest_products
+    SELECT
+        FNV_HASH(product_id)                              AS product_key
+        , product_id
+        , sku
+        , product_name
+        , category_name
+        , is_active
+        , source_scraped_at
+        , CAST(FALSE AS BOOLEAN)                            AS is_unknown_product
+    FROM latest_products
+    )
+
+    SELECT *
+    FROM dim_product__final

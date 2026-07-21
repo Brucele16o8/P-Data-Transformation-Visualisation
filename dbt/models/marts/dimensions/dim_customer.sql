@@ -27,9 +27,9 @@ WITH dim_customer__rank_customers AS
     SELECT
         CAST(-1 AS BIGINT)                                AS customer_key
         , CAST('Unknown' AS VARCHAR(64))                    AS customer_identity_hash
-        , CAST(NULL AS VARCHAR(64))                         AS customer_id_hash
-        , CAST(NULL AS VARCHAR(64))                         AS email_address_hash
-        , CAST(NULL AS VARCHAR(64))                         AS device_id_hash
+        , CAST('Unknown' AS VARCHAR(64))                         AS customer_id_hash
+        , CAST('Unknown' AS VARCHAR(64))                         AS email_address_hash
+        , CAST('Unknown' AS VARCHAR(64))                         AS device_id_hash
 
     UNION ALL
 

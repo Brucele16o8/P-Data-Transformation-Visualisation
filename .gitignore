@@ -23,4 +23,8 @@ dist/
 .vscode/
 .DS_Store
 
-target/
+# dbt-generated artifacts
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
+dbt/dbt_modules/

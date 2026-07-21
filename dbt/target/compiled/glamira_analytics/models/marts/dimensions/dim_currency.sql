@@ -10,7 +10,7 @@ WITH dim_currency__currencies AS
 , dim_currency__final AS 
 (
     SELECT
-        -1::BIGINT                  AS currency_key
+          -1::BIGINT                  AS currency_key
         , 'UNK'::VARCHAR(20)          AS currency_code
 
     UNION ALL

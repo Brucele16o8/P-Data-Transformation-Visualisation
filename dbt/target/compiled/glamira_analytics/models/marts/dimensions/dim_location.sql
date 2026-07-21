@@ -17,7 +17,7 @@ WITH dim_location__distinct_locations AS
 , dim_location__final AS 
 (
     SELECT
-        CAST(-1 AS BIGINT)                                  AS location_key
+          CAST(-1 AS BIGINT)                                AS location_key
         , CAST('Unknown' AS VARCHAR(255))                   AS country_name
         , CAST('Unknown' AS VARCHAR(255))                   AS region_name
         , CAST('Unknown' AS VARCHAR(255))                   AS city_name
