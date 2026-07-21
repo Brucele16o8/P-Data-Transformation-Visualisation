@@ -4,15 +4,185 @@ models:
   - name: dim_customer
     description: >
       Customer dimension containing one row per customer identity,
-      plus one reserved Unknown row.
+      plus one reserved Unknown customer row.
 
     columns:
       - name: customer_key
+        description: Surrogate primary key of the customer dimension.
         data_tests:
           - not_null
           - unique
 
       - name: customer_identity_hash
+        description: >
+          Stable identity used to match sales records to one customer.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: customer_id_hash
+        description: >
+          Pseudonymous hash of the source customer identifier.
+          This may be null when the source customer ID is unavailable.
+
+      - name: email_address_hash
+        description: >
+          Pseudonymous hash of the customer email address.
+          This may be null when the source email is unavailable.
+
+      - name: device_id_hash
+        description: >
+          Pseudonymous hash of the source device identifier.
+          This may be null when the device ID is unavailable.
+
+
+  - name: dim_store
+    description: >
+      Store dimension containing one row per source store,
+      plus one reserved Unknown store row.
+
+    columns:
+      - name: store_key
+        description: Surrogate primary key of the store dimension.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: store_id
+        description: Natural identifier of the source store.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: store_domain
+        description: Website domain associated with the store.
+
+      - name: store_name
+        description: Business name of the store.
+
+      - name: country_code
+        description: Two-character country code associated with the store.
+
+      - name: country_name
+        description: Country associated with the store.
+
+      - name: currency_code
+        description: Default transaction currency of the store.
+
+
+  - name: dim_date
+    description: >
+      Reusable calendar dimension containing one row per calendar date,
+      plus an optional reserved Unknown date row.
+
+    columns:
+      - name: date_key
+        description: >
+          Surrogate date key, normally represented in YYYYMMDD format.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: full_date
+        description: Calendar date represented by the row.
+        data_tests:
+          - unique
+
+
+  - name: dim_product
+    description: >
+      Product dimension containing the latest available record for each
+      product, plus one reserved Unknown product row.
+
+    columns:
+      - name: product_key
+        description: Surrogate primary key of the product dimension.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: product_id
+        description: Natural identifier of the source product.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: sku
+        description: Product stock-keeping unit.
+        data_tests:
+          - not_null
+
+      - name: product_name
+        description: Current product name.
+        data_tests:
+          - not_null
+
+      - name: category_name
+        description: Current product category.
+        data_tests:
+          - not_null
+
+      - name: is_active
+        description: >
+          Indicates whether the product was active in the latest source
+          record. This may be null for the Unknown product row.
+
+      - name: source_scraped_at
+        description: >
+          Timestamp at which the selected source product record was scraped.
+          This may be null for the Unknown product row.
+
+
+  - name: dim_location
+    description: >
+      Location dimension containing one row per distinct combination of
+      country, region and city, plus one reserved Unknown location row.
+
+    data_tests:
+      - dbt_expectations.expect_compound_columns_to_be_unique:
+          arguments:
+            column_list:
+              - country_name
+              - region_name
+              - city_name
+
+    columns:
+      - name: location_key
+        description: Surrogate primary key of the location dimension.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: country_name
+        description: Normalized country name.
+        data_tests:
+          - not_null
+
+      - name: region_name
+        description: Normalized state, province or region name.
+        data_tests:
+          - not_null
+
+      - name: city_name
+        description: Normalized city name.
+        data_tests:
+          - not_null
+
+
+  - name: dim_currency
+    description: >
+      Currency dimension containing one row per supported currency,
+      plus one reserved Unknown currency row.
+
+    columns:
+      - name: currency_key
+        description: Surrogate primary key of the currency dimension.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: currency_code
+        description: Three-character currency code.
         data_tests:
           - not_null
           - unique
