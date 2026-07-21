@@ -3,7 +3,8 @@ version: 2
 models:
   - name: int_checkout_success__order_lines
     description: >
-      One row per product unnested from a checkout_success event.
+      Checkout-success events unnested to one row per product line.
+      The source grain is one event_id and product_index combination.
 
     data_tests:
       - dbt_expectations.expect_compound_columns_to_be_unique:
@@ -13,15 +14,34 @@ models:
               - product_index
 
     columns:
+      - name: sales_order_detail_key
+        description: >
+          Deterministic identifier created from event_id and product_index.
+        data_tests:
+          - not_null
+          - unique
+
       - name: event_id
+        description: Identifier of the source checkout-success event.
+        data_tests:
+          - not_null
+
+      - name: order_id
+        description: Identifier of the source order.
         data_tests:
           - not_null
 
       - name: product_index
+        description: >
+          Zero-based position of the product inside the source
+          cart_products array.
         data_tests:
           - not_null
 
-      - name: sales_order_detail_key
+      - name: product_id
+        description: Product identifier extracted from the cart product.
+
+      - name: source_loaded_at
+        description: Timestamp when the source event was loaded.
         data_tests:
           - not_null
-          - unique

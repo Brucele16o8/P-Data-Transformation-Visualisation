@@ -1,6 +1,6 @@
 
 
-WITH source_data AS
+WITH stg_glamira__events__source AS
 (
     SELECT
           event_data
@@ -8,14 +8,10 @@ WITH source_data AS
     FROM "glamira_analytics"."landing"."glamira_events"
 )
 
-, renamed AS
+, stg_glamira__events__rename AS
 (
     SELECT
-          JSON_EXTRACT_PATH_TEXT
-          (
-              JSON_SERIALIZE(event_data._id)
-            , '$oid'
-          )                                             AS event_id_raw
+          event_data._id."$oid"::VARCHAR                AS event_id_raw
         , event_data.collection::VARCHAR                AS event_type_raw
         , event_data.time_stamp::VARCHAR                AS event_epoch_seconds_raw
         , event_data.local_time::VARCHAR                AS local_time_raw
@@ -32,10 +28,10 @@ WITH source_data AS
         , event_data.cart_products                      AS cart_products
         , event_data                                    AS raw_event
         , loaded_at
-    FROM source_data
+    FROM stg_glamira__events__source
 )
 
-, typed AS
+, stg_glamira__events__cast_type AS
 (
     SELECT
           NULLIF(TRIM(event_id_raw), '')                 AS event_id
@@ -44,13 +40,13 @@ WITH source_data AS
           (
               NULLIF(TRIM(event_epoch_seconds_raw), '')
               AS BIGINT
-          )                                             AS event_epoch_seconds
+          )                                              AS event_epoch_seconds
         , NULLIF(TRIM(local_time_raw), '')               AS local_time_raw
         , TRY_CAST
           (
               NULLIF(TRIM(local_time_raw), '')
               AS TIMESTAMP
-          )                                             AS local_event_timestamp
+          )                                              AS local_event_timestamp
         , NULLIF(TRIM(customer_id_raw), '')              AS customer_id
         , NULLIF(LOWER(TRIM(email_address_raw)), '')     AS email_address
         , NULLIF(TRIM(device_id_raw), '')                AS device_id
@@ -64,36 +60,41 @@ WITH source_data AS
         , cart_products
         , raw_event
         , loaded_at
-    FROM renamed
+    FROM stg_glamira__events__rename
+)
+, stg_glamira__events__final AS
+(
+    SELECT
+          event_id
+        , event_type
+        , event_epoch_seconds
+        , CASE
+            WHEN event_epoch_seconds IS NOT NULL
+                THEN DATEADD
+                (
+                    SECOND
+                    , event_epoch_seconds
+                    , TIMESTAMP '1970-01-01 00:00:00'
+                )
+            ELSE NULL
+        END                                               AS event_timestamp_utc
+        , local_event_timestamp
+        , local_time_raw
+        , customer_id
+        , email_address
+        , device_id
+        , ip_address
+        , store_id
+        , order_id
+        , user_agent
+        , screen_resolution
+        , current_url
+        , referrer_url
+        , cart_products
+        , raw_event
+        , loaded_at
+    FROM stg_glamira__events__cast_type
 )
 
-SELECT
-      event_id
-    , event_type
-    , event_epoch_seconds
-    , CASE
-          WHEN event_epoch_seconds IS NOT NULL
-              THEN DATEADD
-              (
-                  SECOND
-                , event_epoch_seconds
-                , TIMESTAMP '1970-01-01 00:00:00'
-              )
-          ELSE NULL
-      END                                               AS event_timestamp_utc
-    , local_event_timestamp
-    , local_time_raw
-    , customer_id
-    , email_address
-    , device_id
-    , ip_address
-    , store_id
-    , order_id
-    , user_agent
-    , screen_resolution
-    , current_url
-    , referrer_url
-    , cart_products
-    , raw_event
-    , loaded_at
-FROM typed
+SELECT *
+FROM stg_glamira__events__final
