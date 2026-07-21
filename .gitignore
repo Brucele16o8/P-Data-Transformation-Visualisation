@@ -23,4 +23,7 @@ dist/
 .vscode/
 .DS_Store
 
-target/
+# dbt-generated files
+dbt/target/
+dbt/logs/
+dbt/dbt_packages/
